@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="DE Pipeline">
+<title>DE Pipeline Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070810;
+  --surface: #0e0f1a;
+  --surface2: #161728;
+  --border: #1e2035;
+  --border2: #2a2d4a;
+  --text: #e2e4f0;
+  --muted: #5a5d7a;
+  --muted2: #8486a0;
+
+  /* Stage colors */
+  --extract: #00d4ff;
+  --transform: #ff6b35;
+  --load: #7c3aed;
+  --orchestrate: #10b981;
+  --dbt: #f59e0b;
+
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* GRID BG */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position:relative; z-index:1; max-width:430px; margin:0 auto; }
+
+/* ── SPLASH SCREEN ── */
+#splash {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#splash.hide { opacity:0; transform: scale(1.05); pointer-events:none; }
+
+.splash-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--extract) 0%, var(--load) 50%, var(--orchestrate) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.splash-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.splash-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.splash-node {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  animation: splashPulse 1.5s infinite;
+}
+
+.splash-node:nth-child(1) { background: var(--extract); animation-delay: 0s; }
+.splash-node:nth-child(3) { background: var(--transform); animation-delay: 0.2s; }
+.splash-node:nth-child(5) { background: var(--load); animation-delay: 0.4s; }
+.splash-node:nth-child(7) { background: var(--orchestrate); animation-delay: 0.6s; }
+
+.splash-line { width: 24px; height: 1px; background: var(--border2); }
+
+@keyframes splashPulse {
+  0%,100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 52px 20px 16px;
+  position: relative;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.header-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 2px;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 0%, var(--extract) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.xp-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.xp-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--dbt);
+  line-height: 1;
+}
+
+.xp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── PIPELINE VISUAL ── */
+.pipeline-visual {
+  margin: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.pipeline-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pipeline-flow::-webkit-scrollbar { display: none; }
+
+.pipe-stage {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.pipe-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.pipe-icon.extract { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); }
+.pipe-icon.transform { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.3); }
+.pipe-icon.load { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.3); }
+.pipe-icon.orchestrate { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); }
+.pipe-icon.dbt { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); }
+
+.pipe-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.pipe-arrow {
+  flex-shrink: 0;
+  color: var(--border2);
+  font-size: 14px;
+  padding: 0 2px;
+  margin-bottom: 16px;
+}
+
+.pipe-progress-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--border2);
+  transition: background 0.3s;
+}
+
+.pipe-progress-dot.lit { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+/* ── STATS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 20px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* ── SECTION TABS ── */
+.section-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0 20px;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.section-tabs::-webkit-scrollbar { display: none; }
+
+.stab {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  color: var(--muted2);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stab-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+
+.stab.active { color: #fff; border-color: transparent; }
+.stab.active.extract { background: rgba(0,212,255,0.2); border-color: var(--extract); color: var(--extract); }
+.stab.active.transform { background: rgba(255,107,53,0.2); border-color: var(--transform); color: var(--transform); }
+.stab.active.load { background: rgba(124,58,237,0.2); border-color: var(--load); color: var(--load); }
+.stab.active.orchestrate { background: rgba(16,185,129,0.2); border-color: var(--orchestrate); color: var(--orchestrate); }
+.stab.active.dbt { background: rgba(245,158,11,0.2); border-color: var(--dbt); color: var(--dbt); }
+
+/* ── EXERCISE CARDS ── */
+.ex-list { padding: 0 20px 100px; display: flex; flex-direction: column; gap: 10px; }
+
+.ex-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+  animation: fadeUp 0.3s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(12px); }
+  to { opacity:1; transform: translateY(0); }
+}
+
+.ex-card:active { transform: scale(0.98); }
+
+.ex-card-accent {
+  height: 3px;
+  width: 100%;
+}
+
+.ex-card-body { padding: 14px 16px 16px; }
+
+.ex-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ex-type-pill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.ex-status {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.ex-status.done { color: var(--success); }
+.ex-status.going { color: var(--dbt); }
+
+.ex-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.ex-desc {
+  font-size: 13px;
+  color: var(--muted2);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.ex-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ex-tools { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.tool-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.ex-xp {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  color: var(--dbt);
+  letter-spacing: 1px;
+}
+
+/* ── EXERCISE TASKS PREVIEW ── */
+.ex-tasks-preview {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-checks { display: flex; gap: 3px; }
+.mini-check {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  background: var(--border2);
+}
+.mini-check.done { background: var(--success); }
+.mini-check.partial { background: var(--dbt); }
+
+.tasks-text {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── MODAL ── */
+.modal {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 100;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  overscroll-behavior: contain;
+}
+
+.modal.open { transform: translateX(0); }
+
+.modal-top-bar {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+  padding: 52px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-btn {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.modal-title-block { flex: 1; }
+.modal-stage-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.modal-title { font-size: 17px; font-weight: 700; line-height: 1.2; }
+
+.modal-xp {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--dbt);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+/* ── MODAL CONTENT BLOCKS ── */
+.modal-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+
+.block-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* Concept block */
+.concept-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted2);
+}
+
+.concept-card strong { color: var(--text); }
+
+.sql-compare {
+  margin-top: 12px;
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.compare-col { }
+.compare-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.compare-code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted2);
+  line-height: 1.6;
+}
+
+/* Code block */
+.code-wrap {
+  background: #05060e;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.code-filename {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.copy-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--muted2);
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+.code-body {
+  padding: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-x: auto;
+  color: #8892b0;
+}
+
+.code-body .kw { color: #ff79c6; }
+.code-body .fn { color: #82aaff; }
+.code-body .str { color: #a8ff78; }
+.code-body .cm { color: #495670; font-style: italic; }
+.code-body .num { color: #ffb86c; }
+.code-body .cls { color: #f1fa8c; }
+
+/* Tasks */
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.task-item:active { transform: scale(0.98); }
+
+.task-item.done {
+  background: rgba(16,185,129,0.05);
+  border-color: rgba(16,185,129,0.2);
+}
+
+.task-cb {
+  width: 22px; height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border2);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  margin-top: 1px;
+  transition: all 0.2s;
+}
+
+.task-item.done .task-cb {
+  background: var(--success);
+  border-color: var(--success);
+  color: #000;
+  font-weight: 700;
+}
+
+.task-body { flex: 1; }
+
+.task-label {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+
+.task-item.done .task-label { text-decoration: line-through; color: var(--muted); }
+
+.task-type {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.task-type.guided { color: var(--extract); }
+.task-type.challenge { color: var(--transform); }
+
+/* Hint */
+.hint-card {
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.hint-card.warning {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.25);
+  color: #d4a843;
+}
+
+.hint-card.info {
+  background: rgba(0,212,255,0.06);
+  border: 1px solid rgba(0,212,255,0.2);
+  color: #7ecfdf;
+}
+
+.hint-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* Real World box */
+.realworld-card {
+  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(0,212,255,0.06));
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.realworld-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--load);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.realworld-text {
+  font-size: 13px;
+  color: var(--muted2);
+  line-height: 1.6;
+}
+
+/* AI Tutor */
+.ai-tutor {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ai-tutor-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
+  animation: aiBlink 2s infinite;
+}
+
+@keyframes aiBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.ai-tutor-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted2);
+  letter-spacing: 1px;
+}
+
+.ai-messages {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ai-msg {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 90%;
+}
+
+.ai-msg.bot {
+  background: var(--surface2);
+  color: var(--muted2);
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
+}
+
+.ai-msg.user {
+  background: rgba(0,212,255,0.1);
+  color: var(--extract);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
+}
+
+.ai-msg.thinking {
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+}
+
+.ai-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  resize: none;
+}
+
+.ai-input:focus { border-color: var(--extract); }
+
+.ai-send-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--extract);
+  border: none;
+  color: #000;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+/* ── COMPLETE BUTTON ── */
+.modal-footer { padding: 0 20px 50px; display: flex; flex-direction: column; gap: 10px; }
+
+.complete-btn {
+  padding: 17px;
+  border-radius: 16px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.complete-btn:active { transform: scale(0.98); }
+.complete-btn.primary { background: var(--success); color: #000; }
+.complete-btn.already { background: rgba(16,185,129,0.1); border: 1px solid var(--success); color: var(--success); }
+
+.back-list-btn {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--success);
+  color: #000;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'IBM Plex Mono', monospace;
+  z-index: 300;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 14px; }
+
+/* ── STREAK BANNER ── */
+.streak-banner {
+  margin: 0 20px 16px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04));
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-fire { font-size: 24px; }
+
+.streak-info { flex: 1; }
+.streak-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--dbt);
+  line-height: 1;
+}
+.streak-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.streak-msg { font-size: 12px; color: var(--muted2); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">PIPELINE</div>
+  <div class="splash-sub">Data Engineering Academy</div>
+  <div class="splash-pipeline">
+    <div class="splash-node"></div>
+    <div class="splash-line"></div>
+    <div class="splash-node"></div>
+    <div class="splash-line"></div>
+    <div class="splash-node"></div>
+    <div class="splash-line"></div>
+    <div class="splash-node"></div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-brand">PIPELINE</div>
+        <div class="header-sub">// DE Academy · Full Stack</div>
+      </div>
+      <div class="xp-badge">
+        <div class="xp-num" id="totalXP">0</div>
+        <div class="xp-label">XP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE FLOW VISUAL -->
+  <div class="pipeline-visual">
+    <div class="pipeline-label">// Your Pipeline Progress</div>
+    <div class="pipeline-flow" id="pipelineFlow"></div>
+  </div>
+
+  <!-- STREAK -->
+  <div class="streak-banner">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-info">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">DAY STREAK</div>
+    </div>
+    <div class="streak-msg" id="streakMsg">Start your first exercise today!</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statComplete" style="color:var(--success)">0</div>
+      <div class="stat-label">Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statInProgress" style="color:var(--dbt)">0</div>
+      <div class="stat-label">Started</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal" style="color:var(--muted2)">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+  </div>
+
+  <!-- STAGE TABS -->
+  <div class="section-tabs" id="stageTabs"></div>
+
+  <!-- EXERCISE LIST -->
+  <div class="ex-list" id="exList"></div>
+
+</div>
+
+<!-- EXERCISE MODAL -->
+<div class="modal" id="exModal">
+  <div class="modal-top-bar">
+    <button class="back-btn" onclick="closeModal()">←</button>
+    <div class="modal-title-block">
+      <div class="modal-stage-label" id="modalStageLabel"></div>
+      <div class="modal-title" id="modalTitle"></div>
+    </div>
+    <div class="modal-xp" id="modalXP"></div>
+  </div>
+  <div class="modal-content" id="modalContent"></div>
+  <div class="modal-footer">
+    <button class="complete-btn primary" id="completeBtn" onclick="markComplete()">Mark Complete & Earn XP</button>
+    <button class="back-list-btn" onclick="closeModal()">← Back to exercises</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// EXERCISE DATA
+// ─────────────────────────────────────────────
+const STAGES = [
+  { id: 'extract',     label: 'Extract',     icon: '⬇️',  color: 'var(--extract)',     cls: 'extract' },
+  { id: 'transform',   label: 'Transform',   icon: '⚙️',  color: 'var(--transform)',   cls: 'transform' },
+  { id: 'load',        label: 'Load',        icon: '⬆️',  color: 'var(--load)',        cls: 'load' },
+  { id: 'orchestrate', label: 'Orchestrate', icon: '🕐',  color: 'var(--orchestrate)', cls: 'orchestrate' },
+  { id: 'dbt',         label: 'dbt',         icon: '🧱',  color: 'var(--dbt)',         cls: 'dbt' },
+];
+
+const EXERCISES = [
+  // ── EXTRACT ──────────────────────────────────
+  {
+    stage: 'extract', xp: 100,
+    title: 'Read Files: CSV, JSON, Parquet',
+    desc: 'Load raw data from different file formats — the first step of every pipeline.',
+    tools: ['pandas', 'pyarrow'],
+    concept: `<strong>Extract</strong> means getting data from its source and loading it into your code. In real pipelines, sources include files, APIs, databases, and cloud storage.<br><br>Why multiple formats? CSV is simple and everywhere. JSON is common from APIs. Parquet is what data lakes use — it's compressed and fast.`,
+    sqlCompare: { sql: 'SELECT *\nFROM raw_orders;', pandas: 'pd.read_csv(\n  "orders.csv"\n)' },
+    filename: 'extract_files.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># ── CSV (most common raw format)</span>
+df_csv = pd.<span class="fn">read_csv</span>(<span class="str">'orders.csv'</span>)
+
+<span class="cm"># Read only columns you need (faster!)</span>
+df_csv = pd.<span class="fn">read_csv</span>(
+  <span class="str">'orders.csv'</span>,
+  usecols=[<span class="str">'order_id'</span>, <span class="str">'amount'</span>, <span class="str">'date'</span>],
+  parse_dates=[<span class="str">'date'</span>]   <span class="cm"># auto-parse dates</span>
+)
+
+<span class="cm"># ── JSON (from APIs or web)</span>
+df_json = pd.<span class="fn">read_json</span>(<span class="str">'events.json'</span>)
+
+<span class="cm"># ── Parquet (data lake standard)</span>
+df_pq = pd.<span class="fn">read_parquet</span>(<span class="str">'warehouse.parquet'</span>)
+
+<span class="cm"># Always inspect after loading</span>
+<span class="fn">print</span>(df_csv.shape)       <span class="cm"># (rows, cols)</span>
+<span class="fn">print</span>(df_csv.dtypes)      <span class="cm"># column types</span>
+<span class="fn">print</span>(df_csv.<span class="fn">head</span>(<span class="num">3</span>))    <span class="cm"># first 3 rows</span>`,
+    tasks: [
+      { label: 'Download a CSV dataset from Kaggle (search "online retail dataset")', type: 'guided' },
+      { label: 'Load it with pd.read_csv() — print shape and dtypes', type: 'guided' },
+      { label: 'Load ONLY 3 columns using usecols= parameter', type: 'guided' },
+      { label: 'Convert the CSV to Parquet using df.to_parquet() then read it back', type: 'guided' },
+      { label: 'CHALLENGE: Compare file size of CSV vs Parquet using os.path.getsize()', type: 'challenge' },
+      { label: 'CHALLENGE: Time how long each format takes to load using time.time()', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Common Mistake', text: 'Date columns in CSV are loaded as strings by default. Always use parse_dates=[\'column_name\'] or pd.to_datetime() after loading. If you skip this, date filtering and grouping will not work correctly.' },
+    realworld: 'In real data lakes at companies like Grab or Shopee, raw data files land in S3 every hour as Parquet. Your extract job reads those files and passes them to the transform stage.',
+  },
+  {
+    stage: 'extract', xp: 150,
+    title: 'Extract from REST APIs',
+    desc: 'Pull live data from a public API — a very common real-world extract pattern.',
+    tools: ['requests', 'pandas', 'json'],
+    concept: `APIs are one of the most common data sources in real pipelines — payment systems, CRMs, marketing tools all expose APIs. The pattern is always the same: make a request, handle the response, convert to a dataframe.`,
+    sqlCompare: { sql: 'SELECT *\nFROM api_data\nWHERE date = today', pandas: 'response = requests\n  .get(url)\ndf = pd.json_normalize\n  (response.json())' },
+    filename: 'extract_api.py',
+    code: `<span class="kw">import</span> requests
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> logging
+
+logging.<span class="fn">basicConfig</span>(level=logging.INFO)
+
+<span class="kw">def</span> <span class="fn">extract_api</span>(url, params=<span class="kw">None</span>):
+    <span class="kw">try</span>:
+        resp = requests.<span class="fn">get</span>(url, params=params, timeout=<span class="num">10</span>)
+        resp.<span class="fn">raise_for_status</span>()  <span class="cm"># error if 4xx/5xx</span>
+        data = resp.<span class="fn">json</span>()
+        logging.<span class="fn">info</span>(<span class="str">f"Got {len(data)} records"</span>)
+        <span class="kw">return</span> data
+    <span class="kw">except</span> requests.exceptions.<span class="cls">RequestException</span> <span class="kw">as</span> e:
+        logging.<span class="fn">error</span>(<span class="str">f"API error: {e}"</span>)
+        <span class="kw">return None</span>
+
+<span class="cm"># Call a free public API</span>
+url = <span class="str">"https://jsonplaceholder.typicode.com/posts"</span>
+data = <span class="fn">extract_api</span>(url)
+
+<span class="cm"># Nested JSON → flat dataframe</span>
+df = pd.<span class="fn">json_normalize</span>(data)
+<span class="fn">print</span>(df.<span class="fn">head</span>())
+
+<span class="cm"># API with pagination</span>
+<span class="kw">def</span> <span class="fn">extract_all_pages</span>(base_url):
+    all_data = []
+    page = <span class="num">1</span>
+    <span class="kw">while True</span>:
+        data = <span class="fn">extract_api</span>(base_url, {<span class="str">'page'</span>: page})
+        <span class="kw">if not</span> data: <span class="kw">break</span>
+        all_data.extend(data)
+        page += <span class="num">1</span>
+    <span class="kw">return</span> pd.<span class="cls">DataFrame</span>(all_data)`,
+    tasks: [
+      { label: 'Install requests: pip install requests', type: 'guided' },
+      { label: 'Call https://jsonplaceholder.typicode.com/posts and print the raw JSON', type: 'guided' },
+      { label: 'Convert the JSON response to a pandas dataframe', type: 'guided' },
+      { label: 'Add try/except so the function doesn\'t crash on network error', type: 'guided' },
+      { label: 'CHALLENGE: Try https://open.er-api.com/v6/latest/USD for currency rates — extract it', type: 'challenge' },
+      { label: 'CHALLENGE: Build a function that fetches multiple pages and combines them into one dataframe', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Common Mistake', text: 'Always set timeout= in requests.get(). Without it, your pipeline can hang forever waiting for a slow server. Use timeout=10 as a safe default. Also always call raise_for_status() to catch HTTP errors.' },
+    realworld: 'Payment gateways (Stripe, Billplz), e-commerce platforms (Shopify), and marketing tools (Mailchimp) all provide REST APIs. Your extract job calls these every hour or day to pull the latest records.',
+  },
+  {
+    stage: 'extract', xp: 200,
+    title: 'Extract from PostgreSQL',
+    desc: 'Query a live database and load results into pandas — using your SQL skills.',
+    tools: ['sqlalchemy', 'psycopg2', 'pandas'],
+    concept: `<strong>This is where your SQL really shines.</strong> In many pipelines, you extract data from an operational database (like a production Postgres) using SQL queries, then transform it in Python.<br><br>Your CTEs and subqueries work directly inside pd.read_sql() — exactly as you wrote them in SQL.`,
+    sqlCompare: { sql: 'WITH cte AS (\n  SELECT ...\n)\nSELECT * FROM cte;', pandas: 'df = pd.read_sql(\n  "WITH cte AS..."\n  engine\n)' },
+    filename: 'extract_postgres.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine
+<span class="kw">import</span> os
+
+<span class="cm"># Never hardcode credentials — use env vars</span>
+DB_URL = os.environ.<span class="fn">get</span>(<span class="str">'DATABASE_URL'</span>,
+  <span class="str">'postgresql://user:pass@localhost:5432/db'</span>)
+
+engine = <span class="fn">create_engine</span>(DB_URL)
+
+<span class="cm"># Your SQL CTEs work here!</span>
+query = <span class="str">"""
+  WITH daily_orders AS (
+    SELECT
+      DATE(created_at) AS order_date,
+      COUNT(*) AS order_count,
+      SUM(amount) AS revenue
+    FROM orders
+    WHERE created_at >= NOW() - INTERVAL '30 days'
+    GROUP BY 1
+  )
+  SELECT * FROM daily_orders
+  ORDER BY order_date DESC
+"""</span>
+
+df = pd.<span class="fn">read_sql</span>(query, engine)
+<span class="fn">print</span>(df.<span class="fn">head</span>())
+
+<span class="cm"># Parameterized query (safe from SQL injection)</span>
+from sqlalchemy <span class="kw">import</span> text
+safe_query = text(<span class="str">"SELECT * FROM orders WHERE status = :status"</span>)
+df = pd.<span class="fn">read_sql</span>(safe_query, engine, params={<span class="str">"status"</span>: <span class="str">"completed"</span>})`,
+    tasks: [
+      { label: 'Create a free PostgreSQL DB at ElephantSQL.com (free tier)', type: 'guided' },
+      { label: 'pip install sqlalchemy psycopg2-binary', type: 'guided' },
+      { label: 'Create tables and insert sample data using your SQL knowledge', type: 'guided' },
+      { label: 'Use pd.read_sql() with a simple SELECT query', type: 'guided' },
+      { label: 'CHALLENGE: Write a CTE inside pd.read_sql() to get monthly totals', type: 'challenge' },
+      { label: 'CHALLENGE: Store your DB_URL as an environment variable (not in code)', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Security Warning', text: 'Never put your database password directly in your code. Use environment variables: os.environ.get("DATABASE_URL"). This prevents your password from leaking if you share code on GitHub.' },
+    realworld: 'The most common DE pattern in Malaysian startups: extract from a MySQL or Postgres production database, transform in Python, load to a data warehouse like BigQuery or Redshift for reporting.',
+  },
+
+  // ── TRANSFORM ────────────────────────────────
+  {
+    stage: 'transform', xp: 100,
+    title: 'Clean & Validate Data',
+    desc: 'Fix messy real-world data: nulls, wrong types, duplicates, and bad values.',
+    tools: ['pandas'],
+    concept: `<strong>Garbage in, garbage out.</strong> Real data is always messy — nulls where there shouldn't be, dates stored as text, negative prices, duplicate rows. Cleaning is the most important and most time-consuming part of any pipeline.<br><br>Validation means checking: does this data make sense? Are prices positive? Are dates in the right range?`,
+    sqlCompare: { sql: 'WHERE amount > 0\nAND status IS NOT NULL\nAND date >= \'2024\'', pandas: 'df.dropna()\ndf[df.amount > 0]\ndf.drop_duplicates()' },
+    filename: 'transform_clean.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> logging
+
+<span class="kw">def</span> <span class="fn">validate_and_clean</span>(df):
+    initial_rows = len(df)
+    
+    <span class="cm"># ── Fix column types</span>
+    df[<span class="str">'order_date'</span>] = pd.<span class="fn">to_datetime</span>(df[<span class="str">'order_date'</span>])
+    df[<span class="str">'amount'</span>] = pd.<span class="fn">to_numeric</span>(df[<span class="str">'amount'</span>], errors=<span class="str">'coerce'</span>)
+    
+    <span class="cm"># ── Remove duplicates</span>
+    df = df.<span class="fn">drop_duplicates</span>(subset=[<span class="str">'order_id'</span>])
+    
+    <span class="cm"># ── Drop nulls in critical columns</span>
+    df = df.<span class="fn">dropna</span>(subset=[<span class="str">'order_id'</span>, <span class="str">'amount'</span>])
+    
+    <span class="cm"># ── Fill non-critical nulls</span>
+    df[<span class="str">'notes'</span>] = df[<span class="str">'notes'</span>].<span class="fn">fillna</span>(<span class="str">'No notes'</span>)
+    
+    <span class="cm"># ── Validate business rules</span>
+    invalid_amount = df[df[<span class="str">'amount'</span>] <= <span class="num">0</span>]
+    <span class="kw">if</span> len(invalid_amount) > <span class="num">0</span>:
+        logging.<span class="fn">warning</span>(<span class="str">f"Found {len(invalid_amount)} negative amounts"</span>)
+    df = df[df[<span class="str">'amount'</span>] > <span class="num">0</span>]
+    
+    <span class="cm"># ── Standardise text</span>
+    df[<span class="str">'status'</span>] = df[<span class="str">'status'</span>].<span class="fn">str</span>.<span class="fn">lower</span>().<span class="fn">str</span>.<span class="fn">strip</span>()
+    
+    removed = initial_rows - len(df)
+    logging.<span class="fn">info</span>(<span class="str">f"Removed {removed} invalid rows"</span>)
+    <span class="kw">return</span> df`,
+    tasks: [
+      { label: 'Load your dataset and run isnull().sum() — document which columns have nulls', type: 'guided' },
+      { label: 'Fix all date columns with pd.to_datetime()', type: 'guided' },
+      { label: 'Fix numeric columns using pd.to_numeric(errors="coerce")', type: 'guided' },
+      { label: 'Remove duplicate rows using drop_duplicates() on the ID column', type: 'guided' },
+      { label: 'CHALLENGE: Write a validate() function that logs a WARNING if any business rule is broken (e.g. negative amounts)', type: 'challenge' },
+      { label: 'CHALLENGE: Track and log how many rows were removed at each cleaning step', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Common Mistake', text: 'pd.to_numeric(errors="raise") will crash your pipeline if any value can\'t be converted. Always use errors="coerce" — it converts bad values to NaN instead of crashing, so you can then handle them safely with fillna() or dropna().' },
+    realworld: 'A senior DE at any company will check your transform code for data quality logging. If your pipeline silently drops rows without logging why, you\'ll never know when something goes wrong in production.',
+  },
+  {
+    stage: 'transform', xp: 150,
+    title: 'Business Logic Transformations',
+    desc: 'Apply real business rules: grouping, calculating KPIs, creating new dimensions.',
+    tools: ['pandas', 'numpy'],
+    concept: `Transform is where raw data becomes business value. This means calculating revenue, categorising customers, computing month-over-month growth — exactly the logic your SQL CTEs do, but in Python functions that can be tested and reused.`,
+    sqlCompare: { sql: 'CASE WHEN amount > 1000\n  THEN \'high\'\n  ELSE \'low\' END', pandas: 'df["tier"] = np.where(\n  df.amount > 1000,\n  "high", "low"\n)' },
+    filename: 'transform_business.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">add_business_metrics</span>(df):
+    <span class="cm"># ── Customer tiers (like SQL CASE WHEN)</span>
+    df[<span class="str">'customer_tier'</span>] = np.<span class="fn">where</span>(
+        df[<span class="str">'total_spend'</span>] > <span class="num">5000</span>, <span class="str">'vip'</span>,
+        np.<span class="fn">where</span>(df[<span class="str">'total_spend'</span>] > <span class="num">1000</span>, <span class="str">'regular'</span>, <span class="str">'new'</span>)
+    )
+    
+    <span class="cm"># ── Revenue with tax (Malaysia: 6% SST)</span>
+    df[<span class="str">'tax'</span>] = df[<span class="str">'amount'</span>] * <span class="num">0.06</span>
+    df[<span class="str">'total_with_tax'</span>] = df[<span class="str">'amount'</span>] + df[<span class="str">'tax'</span>]
+    
+    <span class="cm"># ── Month-over-month growth (window function)</span>
+    monthly = (df.<span class="fn">groupby</span>(df[<span class="str">'date'</span>].dt.to_period(<span class="str">'M'</span>))[<span class="str">'amount'</span>]
+               .<span class="fn">sum</span>().<span class="fn">reset_index</span>())
+    monthly[<span class="str">'mom_growth'</span>] = monthly[<span class="str">'amount'</span>].<span class="fn">pct_change</span>() * <span class="num">100</span>
+    
+    <span class="cm"># ── Day of week analysis</span>
+    df[<span class="str">'day_name'</span>] = df[<span class="str">'date'</span>].dt.<span class="fn">day_name</span>()
+    df[<span class="str">'is_weekend'</span>] = df[<span class="str">'date'</span>].dt.dayofweek >= <span class="num">5</span>
+    
+    <span class="kw">return</span> df`,
+    tasks: [
+      { label: 'Add a "tier" column categorising customers by spend (new/regular/vip)', type: 'guided' },
+      { label: 'Calculate tax and total_with_tax columns', type: 'guided' },
+      { label: 'Group by month and calculate total monthly revenue', type: 'guided' },
+      { label: 'Add day_name and is_weekend columns to your orders', type: 'guided' },
+      { label: 'CHALLENGE: Calculate month-over-month growth % using pct_change()', type: 'challenge' },
+      { label: 'CHALLENGE: Find the top 10 customers by total spend and label them "top_10" in a new column', type: 'challenge' },
+    ],
+    hint: { type: 'info', title: '💡 SQL Brain Tip', text: 'np.where(condition, true_val, false_val) is exactly like SQL\'s CASE WHEN condition THEN true_val ELSE false_val END. You can nest them for multiple conditions, just like nested CASE WHEN in SQL.' },
+    realworld: 'This is the "T" that analysts depend on. A well-written transform function that adds customer tiers, revenue metrics, and time dimensions makes it easy for the whole team to do analysis without repeating logic.',
+  },
+  {
+    stage: 'transform', xp: 175,
+    title: 'Data Quality Testing',
+    desc: 'Write tests for your pipeline — catch problems before they reach production.',
+    tools: ['pandas', 'pytest', 'great_expectations'],
+    concept: `In production, data quality breaks silently. Orders arrive with null IDs. Prices become negative. Tests catch these issues automatically before bad data reaches your warehouse or reports.<br><br>This is what separates a junior DE from a mid-level: <strong>professional engineers test their pipelines.</strong>`,
+    sqlCompare: { sql: 'SELECT COUNT(*)\nFROM orders\nWHERE amount IS NULL\n-- should be 0', pandas: 'assert df.amount\n  .isnull().sum() == 0,\n  "Null amounts found!"' },
+    filename: 'test_transforms.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> pytest
+
+<span class="cm"># ── Simple assertion-based tests</span>
+<span class="kw">def</span> <span class="fn">test_no_null_order_ids</span>(df):
+    nulls = df[<span class="str">'order_id'</span>].<span class="fn">isnull</span>().<span class="fn">sum</span>()
+    <span class="kw">assert</span> nulls == <span class="num">0</span>, <span class="str">f"Found {nulls} null order IDs!"</span>
+
+<span class="kw">def</span> <span class="fn">test_positive_amounts</span>(df):
+    bad = (df[<span class="str">'amount'</span>] <= <span class="num">0</span>).<span class="fn">sum</span>()
+    <span class="kw">assert</span> bad == <span class="num">0</span>, <span class="str">f"Found {bad} non-positive amounts"</span>
+
+<span class="kw">def</span> <span class="fn">test_no_duplicates</span>(df):
+    dupes = df.<span class="fn">duplicated</span>(<span class="str">'order_id'</span>).<span class="fn">sum</span>()
+    <span class="kw">assert</span> dupes == <span class="num">0</span>, <span class="str">f"Found {dupes} duplicate order IDs"</span>
+
+<span class="kw">def</span> <span class="fn">test_valid_status_values</span>(df):
+    allowed = {<span class="str">'completed'</span>, <span class="str">'pending'</span>, <span class="str">'cancelled'</span>}
+    invalid = <span class="fn">set</span>(df[<span class="str">'status'</span>].<span class="fn">unique</span>()) - allowed
+    <span class="kw">assert not</span> invalid, <span class="str">f"Invalid statuses: {invalid}"</span>
+
+<span class="cm"># ── Run all tests</span>
+<span class="kw">def</span> <span class="fn">run_quality_checks</span>(df):
+    tests = [test_no_null_order_ids, test_positive_amounts,
+             test_no_duplicates, test_valid_status_values]
+    <span class="kw">for</span> test <span class="kw">in</span> tests:
+        <span class="kw">try</span>:
+            <span class="fn">test</span>(df)
+            <span class="fn">print</span>(<span class="str">f"✓ {test.__name__}"</span>)
+        <span class="kw">except</span> <span class="cls">AssertionError</span> <span class="kw">as</span> e:
+            <span class="fn">print</span>(<span class="str">f"✗ {test.__name__}: {e}"</span>)`,
+    tasks: [
+      { label: 'Write a test that checks no null values exist in your ID column', type: 'guided' },
+      { label: 'Write a test that checks all amounts are positive', type: 'guided' },
+      { label: 'Write a test that checks no duplicate IDs exist', type: 'guided' },
+      { label: 'Run all tests on clean data — they should all pass', type: 'guided' },
+      { label: 'CHALLENGE: Deliberately introduce bad data (add a null, a negative amount) and watch tests fail', type: 'challenge' },
+      { label: 'CHALLENGE: pip install pytest and rewrite your tests as proper pytest functions', type: 'challenge' },
+    ],
+    hint: { type: 'info', title: '💡 Industry Tip', text: 'In real companies, data quality tests run before every pipeline load. If any test fails, the pipeline stops and sends an alert (email or Slack). dbt has this built in — one reason it\'s so popular.' },
+    realworld: 'Every mature DE team at companies like Lazada, Grab, or AirAsia has automated data quality checks. If you show these tests in a job interview, you immediately look more senior than 90% of candidates.',
+  },
+
+  // ── LOAD ─────────────────────────────────────
+  {
+    stage: 'load', xp: 150,
+    title: 'Load to PostgreSQL',
+    desc: 'Write your cleaned data back to a database — completing the ETL cycle.',
+    tools: ['sqlalchemy', 'psycopg2', 'pandas'],
+    concept: `Loading is the final step: putting your transformed data somewhere useful — a database, warehouse, or analytics tool. Getting the load strategy right matters a lot: do you replace all data each time? Append new rows? Upsert (update existing, insert new)?`,
+    sqlCompare: { sql: 'INSERT INTO clean_orders\nSELECT * FROM staging\nON CONFLICT (id)\n  DO UPDATE SET ...', pandas: 'df.to_sql(\n  "clean_orders",\n  engine,\n  if_exists="replace"\n)' },
+    filename: 'load_postgres.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sqlalchemy <span class="kw">import</span> create_engine, text
+<span class="kw">import</span> logging
+
+<span class="kw">def</span> <span class="fn">load_to_postgres</span>(df, table_name, engine, strategy=<span class="str">'replace'</span>):
+    <span class="cm">"""
+    strategy: 'replace' = drop+recreate (full refresh)
+              'append'  = add new rows only
+              'upsert'  = update existing, insert new
+    """</span>
+    <span class="kw">if</span> strategy == <span class="str">'replace'</span>:
+        df.<span class="fn">to_sql</span>(table_name, engine,
+                  if_exists=<span class="str">'replace'</span>, index=<span class="kw">False</span>)
+        
+    <span class="kw">elif</span> strategy == <span class="str">'append'</span>:
+        df.<span class="fn">to_sql</span>(table_name, engine,
+                  if_exists=<span class="str">'append'</span>, index=<span class="kw">False</span>)
+    
+    <span class="kw">elif</span> strategy == <span class="str">'upsert'</span>:
+        <span class="cm"># Load to staging first</span>
+        df.<span class="fn">to_sql</span>(<span class="str">'staging_tmp'</span>, engine,
+                  if_exists=<span class="str">'replace'</span>, index=<span class="kw">False</span>)
+        <span class="cm"># Then merge with SQL</span>
+        <span class="kw">with</span> engine.<span class="fn">connect</span>() <span class="kw">as</span> conn:
+            conn.<span class="fn">execute</span>(text(<span class="str">"""
+                INSERT INTO clean_orders
+                SELECT * FROM staging_tmp
+                ON CONFLICT (order_id) DO UPDATE
+                SET amount = EXCLUDED.amount,
+                    status = EXCLUDED.status
+            """</span>))
+    
+    logging.<span class="fn">info</span>(<span class="str">f"Loaded {len(df)} rows to {table_name}"</span>)`,
+    tasks: [
+      { label: 'Load your cleaned dataframe to Postgres using if_exists="replace"', type: 'guided' },
+      { label: 'Verify with pd.read_sql() — query your newly loaded table', type: 'guided' },
+      { label: 'Try if_exists="append" — run it twice and check row count doubled', type: 'guided' },
+      { label: 'Add logging to confirm how many rows were loaded', type: 'guided' },
+      { label: 'CHALLENGE: Implement the upsert strategy — load new data without duplicating existing rows', type: 'challenge' },
+      { label: 'CHALLENGE: Add chunk loading for large files: df.to_sql(chunksize=1000)', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Common Mistake', text: 'if_exists="replace" drops and recreates the table every time — this deletes all existing data! Use "append" when you want to add new rows. Use "replace" only for full refreshes where you want a clean slate each run.' },
+    realworld: 'Most small pipelines use "replace" for simplicity. As data grows, you switch to "append" (incremental loads) or "upsert" to avoid reprocessing everything. Understanding this trade-off is a common interview question.',
+  },
+  {
+    stage: 'load', xp: 200,
+    title: 'Load to AWS S3 (Data Lake)',
+    desc: 'Write Parquet files to cloud storage — how real data lakes work.',
+    tools: ['boto3', 'pandas', 'pyarrow'],
+    concept: `A data lake is basically an S3 bucket with folders full of Parquet files organised by date. This is the standard architecture at most tech companies — raw data lands in S3, gets processed, and clean Parquet files are stored back in S3 in a "processed" folder.`,
+    sqlCompare: { sql: 'COPY clean_orders\nTO \'s3://bucket/\'\nFORMAT PARQUET\nPARTITION BY date', pandas: 'df.to_parquet(\n  "s3://bucket/\n  clean/2024/01/"\n)' },
+    filename: 'load_s3.py',
+    code: `<span class="kw">import</span> boto3
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> io <span class="kw">import</span> BytesIO
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">import</span> os, logging
+
+s3 = boto3.<span class="fn">client</span>(<span class="str">'s3'</span>,
+  aws_access_key_id=os.environ[<span class="str">'AWS_KEY'</span>],
+  aws_secret_access_key=os.environ[<span class="str">'AWS_SECRET'</span>])
+
+BUCKET = <span class="str">'my-data-lake'</span>
+
+<span class="kw">def</span> <span class="fn">load_to_s3</span>(df, layer, dataset):
+    <span class="cm"># Partitioned path: processed/orders/2024/02/25/</span>
+    today = datetime.<span class="fn">now</span>()
+    key = <span class="str">f"{layer}/{dataset}/{today:%Y/%m/%d}/data.parquet"</span>
+    
+    buffer = BytesIO()
+    df.<span class="fn">to_parquet</span>(buffer, index=<span class="kw">False</span>, compression=<span class="str">'snappy'</span>)
+    buffer.<span class="fn">seek</span>(<span class="num">0</span>)
+    
+    s3.<span class="fn">put_object</span>(Bucket=BUCKET, Key=key, Body=buffer.<span class="fn">getvalue</span>())
+    logging.<span class="fn">info</span>(<span class="str">f"Uploaded s3://{BUCKET}/{key}"</span>)
+
+<span class="cm"># Usage</span>
+<span class="fn">load_to_s3</span>(clean_df, layer=<span class="str">'processed'</span>, dataset=<span class="str">'orders'</span>)
+<span class="cm"># → s3://my-data-lake/processed/orders/2024/02/25/data.parquet</span>
+
+<span class="cm"># Read back from S3</span>
+<span class="kw">def</span> <span class="fn">read_from_s3</span>(bucket, key):
+    obj = s3.<span class="fn">get_object</span>(Bucket=bucket, Key=key)
+    <span class="kw">return</span> pd.<span class="fn">read_parquet</span>(BytesIO(obj[<span class="str">'Body'</span>].<span class="fn">read</span>()))`,
+    tasks: [
+      { label: 'Create a free AWS account and create an S3 bucket', type: 'guided' },
+      { label: 'pip install boto3 and set AWS credentials as environment variables', type: 'guided' },
+      { label: 'Upload a Parquet file to S3 using put_object()', type: 'guided' },
+      { label: 'Read it back using get_object() and verify the data', type: 'guided' },
+      { label: 'CHALLENGE: Use date-partitioned paths: processed/orders/2024/02/25/', type: 'challenge' },
+      { label: 'CHALLENGE: List all files in your bucket with s3.list_objects_v2()', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Security Rule', text: 'Never put AWS keys directly in your Python code. Store them as environment variables and access with os.environ["AWS_KEY"]. If you commit keys to GitHub, AWS will email you within minutes saying they found exposed credentials.' },
+    realworld: 'The folder structure processed/dataset/year/month/day/ is called "Hive partitioning". Query engines like Athena and Spark use this to read only the partitions they need — making queries 100x faster on big datasets.',
+  },
+
+  // ── ORCHESTRATE ───────────────────────────────
+  {
+    stage: 'orchestrate', xp: 200,
+    title: 'Build a Complete ETL Pipeline',
+    desc: 'Connect Extract → Transform → Load into one runnable, production-ready script.',
+    tools: ['pandas', 'sqlalchemy', 'logging'],
+    concept: `Orchestration starts with structure. Before using tools like Airflow, you need a clean, modular pipeline script. This means each stage is a function, errors are handled, and the pipeline can run end-to-end automatically.<br><br>Think of this as your pipeline's "skeleton" that Airflow will later schedule.`,
+    sqlCompare: { sql: '-- Airflow DAG equivalent:\n-- Task 1: extract()\n-- Task 2: transform()\n-- Task 3: load()', pandas: 'raw = extract(source)\nclean = transform(raw)\nload(clean, target)' },
+    filename: 'pipeline.py',
+    code: `<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> logging
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+logging.<span class="fn">basicConfig</span>(
+    level=logging.INFO,
+    format=<span class="str">'%(asctime)s [%(levelname)s] %(message)s'</span>
+)
+
+<span class="kw">def</span> <span class="fn">extract</span>(source_path):
+    logging.<span class="fn">info</span>(<span class="str">f"EXTRACT: Reading from {source_path}"</span>)
+    df = pd.<span class="fn">read_csv</span>(source_path, parse_dates=[<span class="str">'date'</span>])
+    logging.<span class="fn">info</span>(<span class="str">f"EXTRACT: Loaded {len(df)} rows"</span>)
+    <span class="kw">return</span> df
+
+<span class="kw">def</span> <span class="fn">transform</span>(df):
+    logging.<span class="fn">info</span>(<span class="str">"TRANSFORM: Starting"</span>)
+    df = df.<span class="fn">dropna</span>(subset=[<span class="str">'order_id'</span>, <span class="str">'amount'</span>])
+    df = df[df[<span class="str">'amount'</span>] > <span class="num">0</span>]
+    df[<span class="str">'tax'</span>] = df[<span class="str">'amount'</span>] * <span class="num">0.06</span>
+    df[<span class="str">'month'</span>] = df[<span class="str">'date'</span>].dt.to_period(<span class="str">'M'</span>).<span class="fn">astype</span>(<span class="fn">str</span>)
+    logging.<span class="fn">info</span>(<span class="str">f"TRANSFORM: {len(df)} rows after cleaning"</span>)
+    <span class="kw">return</span> df
+
+<span class="kw">def</span> <span class="fn">load</span>(df, output_path):
+    logging.<span class="fn">info</span>(<span class="str">f"LOAD: Saving to {output_path}"</span>)
+    df.<span class="fn">to_parquet</span>(output_path, index=<span class="kw">False</span>)
+    logging.<span class="fn">info</span>(<span class="str">f"LOAD: Done — {len(df)} rows saved"</span>)
+
+<span class="kw">def</span> <span class="fn">run_pipeline</span>(source, output):
+    start = datetime.<span class="fn">now</span>()
+    logging.<span class="fn">info</span>(<span class="str">f"PIPELINE START: {start}"</span>)
+    <span class="kw">try</span>:
+        raw  = <span class="fn">extract</span>(source)
+        clean = <span class="fn">transform</span>(raw)
+        <span class="fn">load</span>(clean, output)
+        duration = (datetime.<span class="fn">now</span>() - start).seconds
+        logging.<span class="fn">info</span>(<span class="str">f"PIPELINE DONE in {duration}s"</span>)
+    <span class="kw">except Exception as</span> e:
+        logging.<span class="fn">error</span>(<span class="str">f"PIPELINE FAILED: {e}"</span>)
+        <span class="kw">raise</span>
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">run_pipeline</span>(<span class="str">"raw/orders.csv"</span>, <span class="str">"clean/orders.parquet"</span>)`,
+    tasks: [
+      { label: 'Create extract(), transform(), load() as separate functions in one file', type: 'guided' },
+      { label: 'Add logging.info() at the start and end of each function', type: 'guided' },
+      { label: 'Wrap everything in a run_pipeline() function with try/except', type: 'guided' },
+      { label: 'Run it end-to-end and confirm the log shows all 3 stages', type: 'guided' },
+      { label: 'CHALLENGE: Add a pipeline_run table in Postgres to log each run (start_time, end_time, rows_processed, status)', type: 'challenge' },
+      { label: 'CHALLENGE: Make your pipeline accept a --date argument from command line using argparse', type: 'challenge' },
+    ],
+    hint: { type: 'info', title: '💡 Production Tip', text: 'The if __name__ == "__main__": block means this file can be both imported (by Airflow or tests) and run directly as a script. Always use this pattern — it\'s how professional Python scripts are structured.' },
+    realworld: 'This modular structure is exactly what Airflow, Prefect, and other orchestrators expect. Each function becomes a "Task" in an Airflow DAG. Learning this structure now makes learning Airflow much easier.',
+  },
+  {
+    stage: 'orchestrate', xp: 300,
+    title: 'Apache Airflow: Schedule Your Pipeline',
+    desc: 'Use the industry-standard scheduler to run your pipeline automatically on a schedule.',
+    tools: ['apache-airflow', 'Python'],
+    concept: `Airflow is the most used orchestration tool in data engineering. It lets you schedule pipelines, see their history, retry failed tasks, and monitor everything in a web UI.<br><br>A DAG (Directed Acyclic Graph) is just a definition of your pipeline — what tasks run, in what order, on what schedule.`,
+    sqlCompare: { sql: '-- Airflow is like a\n-- CRON job but smarter:\n-- retry on failure\n-- visual history\n-- dependencies', pandas: '@dag(schedule="0 6 * * *")\ndef my_pipeline():\n  raw = extract()\n  clean = transform(raw)\n  load(clean)' },
+    filename: 'dags/orders_pipeline.py',
+    code: `<span class="kw">from</span> airflow.decorators <span class="kw">import</span> dag, task
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, timedelta
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># DAG default settings</span>
+default_args = {
+    <span class="str">'owner'</span>: <span class="str">'data-team'</span>,
+    <span class="str">'retries'</span>: <span class="num">2</span>,
+    <span class="str">'retry_delay'</span>: timedelta(minutes=<span class="num">5</span>),
+}
+
+<span class="cm"># Define the DAG (your pipeline)</span>
+@dag(
+    dag_id=<span class="str">'daily_orders_pipeline'</span>,
+    schedule=<span class="str">'0 6 * * *'</span>,   <span class="cm"># run 6am every day</span>
+    start_date=datetime(<span class="num">2024</span>, <span class="num">1</span>, <span class="num">1</span>),
+    default_args=default_args,
+    catchup=<span class="kw">False</span>,
+)
+<span class="kw">def</span> <span class="fn">orders_pipeline</span>():
+
+    @task()
+    <span class="kw">def</span> <span class="fn">extract</span>():
+        df = pd.<span class="fn">read_csv</span>(<span class="str">'raw/orders.csv'</span>)
+        <span class="kw">return</span> df.<span class="fn">to_dict</span>(<span class="str">'records'</span>)   <span class="cm"># serialisable</span>
+
+    @task()
+    <span class="kw">def</span> <span class="fn">transform</span>(records):
+        df = pd.<span class="cls">DataFrame</span>(records)
+        df = df.<span class="fn">dropna</span>(subset=[<span class="str">'order_id'</span>])
+        df[<span class="str">'tax'</span>] = df[<span class="str">'amount'</span>] * <span class="num">0.06</span>
+        <span class="kw">return</span> df.<span class="fn">to_dict</span>(<span class="str">'records'</span>)
+
+    @task()
+    <span class="kw">def</span> <span class="fn">load</span>(records):
+        df = pd.<span class="cls">DataFrame</span>(records)
+        df.<span class="fn">to_parquet</span>(<span class="str">'clean/orders.parquet'</span>)
+
+    <span class="cm"># Wire the tasks together</span>
+    raw = <span class="fn">extract</span>()
+    clean = <span class="fn">transform</span>(raw)
+    <span class="fn">load</span>(clean)
+
+orders_pipeline()`,
+    tasks: [
+      { label: 'Install Airflow: pip install apache-airflow (takes a few minutes)', type: 'guided' },
+      { label: 'Run: airflow standalone — it starts a local scheduler + web UI', type: 'guided' },
+      { label: 'Open localhost:8080 in browser — log in and explore the UI', type: 'guided' },
+      { label: 'Copy the DAG code to your ~/airflow/dags/ folder', type: 'guided' },
+      { label: 'Trigger your DAG manually from the UI and watch it run', type: 'guided' },
+      { label: 'CHALLENGE: Add email_on_failure=True in default_args (set up with your email)', type: 'challenge' },
+      { label: 'CHALLENGE: Add a 4th task: send_summary() that prints row counts after loading', type: 'challenge' },
+    ],
+    hint: { type: 'warning', title: '⚠ Airflow Tip', text: 'Airflow tasks must pass serialisable data between each other (lists/dicts, not DataFrames). That\'s why you see .to_dict("records") — it converts the DataFrame to a list of dicts that Airflow can pass between tasks.' },
+    realworld: 'Airflow is on almost every senior DE job description. Even knowing how to read a DAG and explain what it does will impress interviewers. Running it locally and building one simple DAG puts you ahead of most candidates.',
+  },
+
+  // ── DBT ───────────────────────────────────────
+  {
+    stage: 'dbt', xp: 200,
+    title: 'dbt: Your First Data Model',
+    desc: 'Transform data using SQL models — dbt turns your CTE skills into a professional workflow.',
+    tools: ['dbt-core', 'dbt-postgres', 'SQL'],
+    concept: `dbt (data build tool) lets you write SQL transformations as version-controlled, tested, documented models. Each .sql file is a model — dbt runs it and creates a table or view in your warehouse.<br><br><strong>Best part:</strong> it's just SQL. Your CTE skills work directly. dbt adds structure, testing, and documentation around the SQL you already know.`,
+    sqlCompare: { sql: '-- In dbt, this file is\n-- models/monthly_revenue.sql\nWITH orders AS (\n  SELECT * FROM {{ ref(\n    "stg_orders") }}\n)', pandas: '-- dbt ref() links models\n-- like Python imports\n-- dbt test checks quality\n-- dbt docs generates docs' },
+    filename: 'models/mart_monthly_revenue.sql',
+    code: `<span class="cm">-- models/staging/stg_orders.sql</span>
+<span class="cm">-- Stage 1: clean raw data</span>
+
+<span class="kw">WITH</span> source <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> {{ source(<span class="str">'raw'</span>, <span class="str">'orders'</span>) }}
+),
+
+cleaned <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        order_id,
+        customer_id,
+        <span class="fn">CAST</span>(amount <span class="kw">AS</span> <span class="cls">DECIMAL</span>(<span class="num">10</span>,<span class="num">2</span>))    <span class="kw">AS</span> amount,
+        <span class="fn">DATE</span>(created_at)                   <span class="kw">AS</span> order_date,
+        <span class="fn">LOWER</span>(<span class="fn">TRIM</span>(status))               <span class="kw">AS</span> status
+    <span class="kw">FROM</span> source
+    <span class="kw">WHERE</span> amount > <span class="num">0</span>
+      <span class="kw">AND</span> order_id <span class="kw">IS NOT NULL</span>
+)
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> cleaned
+
+<span class="cm">---</span>
+<span class="cm">-- models/mart/monthly_revenue.sql</span>
+<span class="cm">-- Stage 2: business metrics (uses stage 1)</span>
+
+<span class="kw">WITH</span> orders <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> * <span class="kw">FROM</span> {{ ref(<span class="str">'stg_orders'</span>) }}
+),
+
+monthly <span class="kw">AS</span> (
+    <span class="kw">SELECT</span>
+        <span class="fn">DATE_TRUNC</span>(<span class="str">'month'</span>, order_date)  <span class="kw">AS</span> month,
+        <span class="fn">COUNT</span>(*)                           <span class="kw">AS</span> order_count,
+        <span class="fn">SUM</span>(amount)                        <span class="kw">AS</span> revenue,
+        <span class="fn">AVG</span>(amount)                        <span class="kw">AS</span> avg_order_value
+    <span class="kw">FROM</span> orders
+    <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+    <span class="kw">GROUP BY</span> <span class="num">1</span>
+)
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> monthly`,
+    tasks: [
+      { label: 'Install dbt: pip install dbt-postgres', type: 'guided' },
+      { label: 'Run: dbt init my_project — explore the folder structure it creates', type: 'guided' },
+      { label: 'Connect dbt to your Postgres DB (edit profiles.yml)', type: 'guided' },
+      { label: 'Write your first staging model: stg_orders.sql (clean your raw table)', type: 'guided' },
+      { label: 'Run: dbt run — check Postgres to see the new table created', type: 'guided' },
+      { label: 'CHALLENGE: Write a mart model that uses {{ ref("stg_orders") }} to build monthly revenue', type: 'challenge' },
+      { label: 'CHALLENGE: Add dbt tests: not_null and unique on order_id in schema.yml', type: 'challenge' },
+    ],
+    hint: { type: 'info', title: '💡 Career Tip', text: '{{ ref("model_name") }} is dbt\'s way of linking models — it\'s like an import statement. dbt figures out the order to run them automatically. This is called lineage and it\'s one of dbt\'s most powerful features.' },
+    realworld: 'dbt is in the top 3 most mentioned tools in data engineering job posts right now. A candidate who can write dbt models, add tests, and generate documentation is immediately more valuable than one who only knows pandas.',
+  },
+  {
+    stage: 'dbt', xp: 250,
+    title: 'dbt Tests & Documentation',
+    desc: 'Add automated tests and docs to your models — the professional dbt workflow.',
+    tools: ['dbt-core', 'YAML', 'SQL'],
+    concept: `dbt tests run SQL assertions automatically every time you run your pipeline. dbt docs generates a website showing your entire data model — every table, column, relationship, and test. This is what a mature data team looks like.`,
+    sqlCompare: { sql: '-- dbt test equivalent:\nSELECT COUNT(*)\nFROM orders\nWHERE order_id IS NULL\n-- must return 0', pandas: '# In schema.yml:\ncolumns:\n  - name: order_id\n    tests:\n      - not_null\n      - unique' },
+    filename: 'models/staging/schema.yml',
+    code: `<span class="cm"># models/staging/schema.yml</span>
+<span class="cm"># dbt reads this to run tests</span>
+
+version: <span class="num">2</span>
+
+models:
+  - name: stg_orders
+    description: <span class="str">"Cleaned and typed orders"</span>
+    columns:
+      - name: order_id
+        description: <span class="str">"Primary key"</span>
+        tests:
+          - not_null
+          - unique
+
+      - name: amount
+        description: <span class="str">"Order amount in MYR"</span>
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: <span class="num">0</span>
+
+      - name: status
+        tests:
+          - accepted_values:
+              values: [<span class="str">'completed'</span>, <span class="str">'pending'</span>, <span class="str">'cancelled'</span>]
+
+<span class="cm"># Run all tests</span>
+<span class="cm"># $ dbt test</span>
+<span class="cm"># Generates docs website</span>
+<span class="cm"># $ dbt docs generate</span>
+<span class="cm"># $ dbt docs serve</span>`,
+    tasks: [
+      { label: 'Create a schema.yml file in your models/staging/ folder', type: 'guided' },
+      { label: 'Add not_null and unique tests to your order_id column', type: 'guided' },
+      { label: 'Run: dbt test — see all tests pass in green', type: 'guided' },
+      { label: 'Add accepted_values test to your status column', type: 'guided' },
+      { label: 'Run: dbt docs generate then dbt docs serve — open the docs website', type: 'guided' },
+      { label: 'CHALLENGE: Add a description to every column in your schema.yml', type: 'challenge' },
+      { label: 'CHALLENGE: Deliberately break a test (add a null order_id) and see dbt test fail', type: 'challenge' },
+    ],
+    hint: { type: 'info', title: '💡 Interview Gold', text: 'Being able to show a dbt project with tests and generated documentation in a job interview is one of the most impressive things a junior candidate can do. Screenshot the docs website and add it to your portfolio README.' },
+    realworld: 'At companies with mature data teams, every dbt model has documentation and tests. When you run "dbt build" it runs models AND tests in the right order. If any test fails, the pipeline stops — exactly like unit tests in software engineering.',
+  },
+];
+
+// ─────────────────────────────────────────────
+// STATE MANAGEMENT
+// ─────────────────────────────────────────────
+let state = {};
+let currentStage = 'extract';
+let currentExIdx = null;
+
+function loadState() {
+  try { state = JSON.parse(localStorage.getItem('de_v2') || '{}'); }
+  catch(e) { state = {}; }
+}
+
+function saveState() {
+  try { localStorage.setItem('de_v2', JSON.stringify(state)); } catch(e) {}
+}
+
+function getEx(idx) { return state[idx] || { status: 'todo', tasks: [] }; }
+
+// ─────────────────────────────────────────────
+// RENDER FUNCTIONS
+// ─────────────────────────────────────────────
+function renderPipelineFlow() {
+  const el = document.getElementById('pipelineFlow');
+  let html = '';
+  STAGES.forEach((stage, si) => {
+    const stageExs = EXERCISES.filter((e, i) => e.stage === stage.id);
+    const done = stageExs.filter((e, i) => {
+      const globalIdx = EXERCISES.indexOf(e);
+      return getEx(globalIdx).status === 'completed';
+    }).length;
+    const isLit = done > 0;
+    html += `
+      <div class="pipe-stage" onclick="switchStage('${stage.id}')">
+        <div class="pipe-icon ${stage.cls}">${stage.icon}</div>
+        <div class="pipe-name">${stage.label}</div>
+        <div class="pipe-progress-dot ${isLit ? 'lit' : ''}"></div>
+      </div>`;
+    if (si < STAGES.length - 1) html += `<div class="pipe-arrow">→</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderTabs() {
+  const el = document.getElementById('stageTabs');
+  el.innerHTML = STAGES.map(s => {
+    const count = EXERCISES.filter(e => e.stage === s.id).length;
+    const done = EXERCISES.filter((e, i) => e.stage === s.id && getEx(i).status === 'completed').length;
+    const active = currentStage === s.id ? 'active ' + s.cls : '';
+    return `<button class="stab ${active}" onclick="switchStage('${s.id}')">
+      <span class="stab-dot" style="background:${s.color}"></span>
+      ${s.label} ${done}/${count}
+    </button>`;
+  }).join('');
+}
+
+function renderExercises() {
+  const el = document.getElementById('exList');
+  const exs = EXERCISES.map((e, i) => ({...e, idx: i})).filter(e => e.stage === currentStage);
+  if (!exs.length) { el.innerHTML = '<div class="empty">No exercises here yet.</div>'; return; }
+
+  el.innerHTML = exs.map((ex, cardI) => {
+    const s = getEx(ex.idx);
+    const statusLabel = s.status === 'completed' ? '✓ DONE' : s.status === 'in-progress' ? '⟳ STARTED' : '○ TODO';
+    const statusClass = s.status === 'completed' ? 'done' : s.status === 'in-progress' ? 'going' : '';
+    const stageInfo = STAGES.find(st => st.id === ex.stage);
+    const tasksTotal = ex.tasks.length;
+    const tasksDone = (s.tasks || []).filter(Boolean).length;
+
+    const miniChecks = ex.tasks.slice(0, 6).map((_, ti) =>
+      `<div class="mini-check ${(s.tasks||[])[ti] ? 'done' : ''}"></div>`
+    ).join('');
+
+    return `<div class="ex-card" style="animation-delay:${cardI * 0.05}s" onclick="openExercise(${ex.idx})">
+      <div class="ex-card-accent" style="background:${stageInfo.color}"></div>
+      <div class="ex-card-body">
+        <div class="ex-card-top">
+          <div class="ex-type-pill" style="background:${stageInfo.color}20;color:${stageInfo.color};border:1px solid ${stageInfo.color}40">${stageInfo.icon} ${stageInfo.label}</div>
+          <div class="ex-status ${statusClass}">${statusLabel}</div>
+        </div>
+        <div class="ex-title">${ex.title}</div>
+        <div class="ex-desc">${ex.desc}</div>
+        <div class="ex-footer">
+          <div class="ex-tools">${ex.tools.map(t => `<span class="tool-tag">${t}</span>`).join('')}</div>
+          <div class="ex-xp">+${ex.xp} XP</div>
+        </div>
+        <div class="ex-tasks-preview">
+          <div class="mini-checks">${miniChecks}</div>
+          <div class="tasks-text">${tasksDone}/${tasksTotal} tasks</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const total = EXERCISES.length;
+  const done = EXERCISES.filter((_, i) => getEx(i).status === 'completed').length;
+  const inProgress = EXERCISES.filter((_, i) => getEx(i).status === 'in-progress').length;
+  const xp = EXERCISES.reduce((acc, ex, i) => acc + (getEx(i).status === 'completed' ? ex.xp : 0), 0);
+
+  document.getElementById('statComplete').textContent = done;
+  document.getElementById('statInProgress').textContent = inProgress;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('totalXP').textContent = xp;
+
+  const streak = state.streak || 0;
+  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('streakMsg').textContent = streak === 0
+    ? 'Complete an exercise to start!'
+    : streak === 1 ? 'Great start! Keep going!' : `${streak} days strong 💪`;
+}
+
+function switchStage(stageId) {
+  currentStage = stageId;
+  renderTabs();
+  renderExercises();
+  renderPipelineFlow();
+}
+
+// ─────────────────────────────────────────────
+// EXERCISE MODAL
+// ─────────────────────────────────────────────
+function openExercise(idx) {
+  currentExIdx = idx;
+  const ex = EXERCISES[idx];
+  const s = getEx(idx);
+  const stageInfo = STAGES.find(st => st.id === ex.stage);
+
+  // Mark in-progress
+  if (s.status === 'todo') {
+    s.status = 'in-progress';
+    state[idx] = s;
+    saveState();
+  }
+
+  document.getElementById('modalStageLabel').innerHTML =
+    `<span style="color:${stageInfo.color}">${stageInfo.icon} ${stageInfo.label} Stage</span>`;
+  document.getElementById('modalTitle').textContent = ex.title;
+  document.getElementById('modalXP').textContent = `+${ex.xp}XP`;
+
+  // Build content
+  const sqlC = ex.sqlCompare;
+  let html = `
+    <div>
+      <div class="block-label" style="color:${stageInfo.color}">// What & Why</div>
+      <div class="concept-card">${ex.concept}
+        <div class="sql-compare">
+          <div class="compare-col">
+            <div class="compare-label" style="color:var(--extract)">SQL</div>
+            <div class="compare-code">${sqlC.sql}</div>
+          </div>
+          <div class="compare-col">
+            <div class="compare-label" style="color:var(--transform)">Python</div>
+            <div class="compare-code">${sqlC.pandas}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="block-label" style="color:${stageInfo.color}">// Reference Code</div>
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-filename">${ex.filename}</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+        </div>
+        <div class="code-body" id="codeBody">${ex.code}</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="block-label" style="color:${stageInfo.color}">// Your Tasks</div>
+      <div class="task-list" id="taskList">
+        ${ex.tasks.map((task, ti) => {
+          const done = (s.tasks || [])[ti];
+          return `<div class="task-item ${done ? 'done' : ''}" onclick="toggleTask(${idx}, ${ti})">
+            <div class="task-cb">${done ? '✓' : ''}</div>
+            <div class="task-body">
+              <div class="task-label">${task.label}</div>
+              <div class="task-type ${task.type}">${task.type === 'guided' ? '▶ GUIDED' : '⚡ CHALLENGE'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="hint-card ${ex.hint.type}">
+        <div class="hint-title">${ex.hint.title}</div>
+        ${ex.hint.text}
+      </div>
+    </div>
+
+    <div>
+      <div class="realworld-card">
+        <div class="realworld-title">🌍 Real World Context</div>
+        <div class="realworld-text">${ex.realworld}</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="block-label" style="color:${stageInfo.color}">// Ask AI Tutor</div>
+      <div class="ai-tutor">
+        <div class="ai-tutor-header">
+          <div class="ai-dot"></div>
+          <div class="ai-tutor-label">AI Tutor — ask anything about this exercise</div>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+          <div class="ai-msg bot">Hi! I'm your DE tutor. Ask me anything about ${ex.title} — errors you're getting, concepts you don't understand, or how this applies to real jobs. 💬</div>
+        </div>
+        <div class="ai-input-row">
+          <textarea class="ai-input" id="aiInput" placeholder="e.g. Why do I need try/except here?" rows="1"></textarea>
+          <button class="ai-send-btn" onclick="askTutor()">↑</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modalContent').innerHTML = html;
+
+  // Complete button state
+  const btn = document.getElementById('completeBtn');
+  if (s.status === 'completed') {
+    btn.textContent = '✓ Already Completed!';
+    btn.className = 'complete-btn already';
+  } else {
+    btn.textContent = `Mark Complete & Earn +${ex.xp} XP`;
+    btn.className = 'complete-btn primary';
+  }
+
+  document.getElementById('exModal').classList.add('open');
+  document.getElementById('exModal').scrollTop = 0;
+}
+
+function closeModal() {
+  document.getElementById('exModal').classList.remove('open');
+  renderStats();
+  renderTabs();
+  renderExercises();
+  renderPipelineFlow();
+}
+
+function toggleTask(exIdx, ti) {
+  const s = getEx(exIdx);
+  if (!s.tasks) s.tasks = [];
+  s.tasks[ti] = !s.tasks[ti];
+  state[exIdx] = s;
+  saveState();
+  renderStats();
+
+  // Re-render task list only
+  const ex = EXERCISES[exIdx];
+  const taskList = document.getElementById('taskList');
+  if (!taskList) return;
+  taskList.innerHTML = ex.tasks.map((task, i) => {
+    const done = (s.tasks || [])[i];
+    return `<div class="task-item ${done ? 'done' : ''}" onclick="toggleTask(${exIdx}, ${i})">
+      <div class="task-cb">${done ? '✓' : ''}</div>
+      <div class="task-body">
+        <div class="task-label">${task.label}</div>
+        <div class="task-type ${task.type}">${task.type === 'guided' ? '▶ GUIDED' : '⚡ CHALLENGE'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (s.tasks[ti]) showToast('Task done! +XP incoming 🎯');
+}
+
+function markComplete() {
+  const idx = currentExIdx;
+  const ex = EXERCISES[idx];
+  const s = getEx(idx);
+  if (s.status === 'completed') return;
+
+  s.status = 'completed';
+  s.tasks = ex.tasks.map(() => true);
+  state[idx] = s;
+
+  // Streak
+  const today = new Date().toDateString();
+  if (state.lastDay !== today) {
+    state.streak = (state.streak || 0) + 1;
+    state.lastDay = today;
+  }
+
+  saveState();
+  renderStats();
+  showToast(`+${ex.xp} XP earned! 🔥`);
+
+  const btn = document.getElementById('completeBtn');
+  btn.textContent = '✓ Completed!';
+  btn.className = 'complete-btn already';
+
+  // Refresh tasks as all done
+  const taskList = document.getElementById('taskList');
+  if (taskList) {
+    taskList.innerHTML = ex.tasks.map((task, i) => `
+      <div class="task-item done">
+        <div class="task-cb">✓</div>
+        <div class="task-body">
+          <div class="task-label">${task.label}</div>
+          <div class="task-type ${task.type}">${task.type === 'guided' ? '▶ GUIDED' : '⚡ CHALLENGE'}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function copyCode(btn) {
+  const codeEl = document.getElementById('codeBody');
+  if (!codeEl) return;
+  navigator.clipboard.writeText(codeEl.innerText).then(() => {
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+
+// ─────────────────────────────────────────────
+// AI TUTOR
+// ─────────────────────────────────────────────
+async function askTutor() {
+  const input = document.getElementById('aiInput');
+  const messages = document.getElementById('aiMessages');
+  const question = input.value.trim();
+  if (!question) return;
+
+  const ex = EXERCISES[currentExIdx];
+  input.value = '';
+
+  // User message
+  messages.innerHTML += `<div class="ai-msg user">${question}</div>`;
+  messages.innerHTML += `<div class="ai-msg thinking" id="thinkingMsg">⟳ Thinking...</div>`;
+  messages.scrollTop = messages.scrollHeight;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a friendly, practical data engineering tutor helping a beginner in Malaysia land their first DE job. The student knows SQL well (CTEs and subqueries). They are currently doing an exercise called "${ex.title}" in the ${ex.stage} stage. Tools: ${ex.tools.join(', ')}. Keep answers short, practical, beginner-friendly. Always relate Python concepts to SQL when possible. Use simple English. Be encouraging. If they share an error, help debug it step by step.`,
+        messages: [{ role: 'user', content: question }]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Sorry, could not connect.';
+    document.getElementById('thinkingMsg')?.remove();
+    messages.innerHTML += `<div class="ai-msg bot">${reply.replace(/\n/g, '<br>').replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.1);padding:1px 4px;border-radius:3px;font-family:IBM Plex Mono,monospace;font-size:11px">$1</code>')}</div>`;
+  } catch(e) {
+    document.getElementById('thinkingMsg')?.remove();
+    messages.innerHTML += `<div class="ai-msg bot">⚠ Could not connect to AI tutor. Check your internet.</div>`;
+  }
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  renderPipelineFlow();
+  renderTabs();
+  renderExercises();
+  renderStats();
+
+  // Hide splash after 2s
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+    setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
+  }, 1800);
+});
+</script>
+</body>
+</html>
